@@ -1,0 +1,6 @@
+
+# Statistical analysis
+
+Our factor mixture model fits extremely well, with an entropy value of `r entropy`. Generally, entropy values of at least 0.7 are desired. Entropy captures the quality of classification of people into different classes, and ranges from 0-1. Greater entropy suggests low overlap in the latent classes, and values greater than 0.8 suggest that correct classification can be expected with at about 90% certainty (Sawatzky et al, 2012).
+
+

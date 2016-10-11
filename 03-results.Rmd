@@ -1,0 +1,199 @@
+
+# Results
+
+## Latent variable measurement model: Analysis details and summary of results.
+
+Choice of indicators for the latent variable measurement model was informed by clinical judgement and prior empirical research using the PPMI database (Hirschauer et al, 2015; Dinov et al 2016). We specifically included only factors that could be available clinically (symptom rating scales, cognitive tests) and excluded high-cost and specialty laboratory-based imaging modalities. We also limit to symptoms measured longitudinally in the PPMI. This reflects our goal that the derived latent variable measurement model be feasible for use clinically and repeatedly to characterize status and course in PD. Broadly speaking, the domains include symptoms assessed in the MDS-UPDRS (Movement Disorder Society Unified Parkinson's Disease Rating Scale) parts II & III, cognitive function as assessed with the MoCA (Montreal Cognitive Assessment), autonomic function as assessed with the SCOPA-AUT (Scales for Outcomes in Parkinson’s disease – Autonomic). We omit part I of the MDS-UPDRS following the work of Dinov et al (2016). Inclusion of the domains and measures below is supported by prior work by Hirschauer, Adeli, and Buford (2015) and Dinov et al (2016). The domains were divided into subdomains, which consisted of the sum of the related items.
+
+
+```{r, chunk1}
+foo.analysis <- "estimator = mlr; "
+foo.variable <- ""
+foo.output <- "standardized; modindices(0);"
+foo.savedata <- ""
+
+foo100.model <- "g by np2f1* np2f2 np2f3 ;
+                 g by np3f1 np3f2 np3f3 np3f4 np3f5 np3f6 np3f7; 
+                 g by scauf1 scauf2 scauf3 scauf4;
+                 g by mcatot;
+                 g@1; 
+                 np2 by np2f1* np2f2 np2f3;
+                 np2@1;
+                 scau by scauf1* scauf3 scauf4;
+                 scau@1;
+                 tremor by np2f2* np3f2 np3f6;
+                 tremor@1;
+                 g with np2@0 scau@0 tremor@0 ;
+                 np2 with scau@0 tremor@0 ;
+                 scau with tremor@0 ;
+                 scauf1 with np2f1;
+                 np3f3 with np3f5;
+                 scauf1 with scauf2;
+                 np2f3 with np3f4;
+                 np3f4 with np3f7;
+                 np3f5 with np3f7;
+                 [g@0];"
+foo100.savedata <- "file = foo100fscores.dat; save=fscores;"
+
+foo100.usevar <- c("np2f1", "np2f2", "np2f3", 
+                  "np3f1", "np3f2", "np3f3", "np3f4", "np3f5", "np3f6", "np3f7", 
+                  "scauf1", "scauf2", "scauf3", "scauf4", 
+                  "mcatot")
+
+foo100.cfa.body <- mplusObject(
+  ANALYSIS = foo.analysis,
+  VARIABLE = foo.variable,
+  MODEL = foo100.model,
+  OUTPUT = foo.output,
+  SAVEDATA = foo100.savedata,
+  usevariables = foo100.usevar,
+  rdata = ppmi.pd
+)
+foo100.cfa.fit <- mplusModeler(foo100.cfa.body,
+                              modelout = "foo100.cfa.inp",
+                              run = TRUE)
+
+#mplus.model.fit("foo100.cfa.out")
+#mplus.parameter.table("foo100.cfa.out")
+
+cfi <- round(extractModelSummaries("foo100.cfa.out")$CFI, 2)
+rmsea <- round(extractModelSummaries("foo100.cfa.out")$RMSEA_Estimate, 3)
+
+```
+
+
+Our final confirmatory factor analysis model, parameterized as a bifactor measurement model indicates a reasonably well fitting model. The Confirmatory Fit Index (CFI) is `r cfi` and the root mean squared error of approximation (RMSEA) is `r rmsea`. Thresholds for well-fitting models can include CFI of greater than 0.90 (Hu & Bentler, 1998) and RMSEA values of less than 0.06. We accept our results as falling reasonably close to these guidelines and infer we have achieved reasonably good fit. The bifactor measurement models assume a single general trait underlies the signs and symptoms, and several additional factors are present and specific to at least two other indicators. The specific factors are thought to capture symptom-specific covariance that is uncorrelated with the general trait. Our test of the construct validity for the resulting general PPMI-PD Severity Score as an indicator of PD severity is that among PD patients, as they age, the PPMI-PD Severity Score increases for most (but not all). A graphical illustration of each PD patient’s trend (and an overall trend in the blue line) is illustrated in Figure 1.
+
+
+```{r}
+
+foo100.fscores <- readModels("foo100.cfa.out")$savedata %>%
+  select(G, NP2, SCAU, TREMOR)
+
+ppmi.pd.results <- cbind(ppmi.pd, foo100.fscores)
+
+ggplot(ppmi.pd.results, aes(x=visit, y=G, group=patno)) +
+  geom_line() +
+  geom_smooth(aes(group = 1), se=FALSE) +
+  scale_x_continuous(name = "Years from baseline visit",
+                     breaks = c(0, 1, 2, 3, 4, 5),
+                     labels = c(0, 1, 2, 3, 4, 5))
+
+```
+
+## Factor Mixture Models. Analysis details and summary of results.
+
+Given an acceptably fitting latent variable measurement model for PD severity, we then identify subgroups of patients with distinct symptom profiles. This is a categorical latent variable
+generalization of the continuous latent variable model. Our model includes the continuous general and sign-and-symptom-specific factors for the whole PD patient sample bifactor model described in section 1a, but we now include the possibility that our
+sample of patients is described by two or more population sub-groups with distinct measurement model parameters. This mode of analysis is referred to as factor mixture modeling.
+
+Results are shown in Figure 2. This figure shows “estimated difficulty” on the y-axis, which is an indication of the relative importance of the symptom to the general trait (and is technically the level on the latent trait where the mean level of the symptom intensity will be observed). One of the four types has a qualitatively distinct pattern of symptoms. Class 1 is characterized by good cognitive functioning (MCATOT) and low impact of symptoms in daily living (UPDRS part II scores include the NP2F1-NP2F3 indicators), relatively low levels of motor symptoms other than NP3F2 (rest tremor) and NP3F6 (postural/kinetic tremors) and low levels of autonomic involvement (SCAUF1-SCAIF4 refer to symptom domains from the Scales for Outcomes in Parkinson’s disease: Autonomic scale). Classes 2-4 differ from each other primarily quantitatively, meaning, the patterns of relative importance of each sign and symptom domain are consistent across class, but the classes differ from one another primarily in the level of the symptom burden expressed at the mean level of the general trait in the class. This quantitative distinction is certainly true for classes 2 & 3, but class 4 has some distinct characteristics relative to classes 2 & 3: Class 4 has a pronounced SCAUF3 (cardiovascular) and SCAUF4 (thermoregulatory) presentation. Class 4 also has relatively low importance for NP3F1 (midline function) and NP3F7 (lower limb bradykinesia).
+
+```{r}
+goo.analysis <- "estimator = mlr;
+                 STARTS = 100 20;
+                 TYPE = MIXTURE;"
+
+goo.output <- "standardized; modindices(0);"
+
+goo3.savedata <- "save = cprob fscores; file = goo003cprob.dat; "
+goo3.variable <- "CLASSES = c(4);"
+goo3.model <- "%OVERALL% 
+               g by np2f1* np2f2 np2f3 ;
+               g by np3f1 np3f2 np3f3 np3f4 np3f5 np3f6 np3f7; 
+               g by scauf1 scauf2 scauf3 scauf4;
+               g by mcatot;
+               g@1;
+               %c#1%
+               g by np2f1* np2f2 np2f3 ;
+               g by np3f1 np3f2 np3f3 np3f4 np3f5 np3f6 np3f7; 
+               g by scauf1 scauf2 scauf3 scauf4;
+               g by mcatot;
+               [np2f1-mcatot*]; 
+               [g@0];
+               %c#2%
+               g by np2f1* np2f2 np2f3 ;
+               g by np3f1 np3f2 np3f3 np3f4 np3f5 np3f6 np3f7; 
+               g by scauf1 scauf2 scauf3 scauf4;
+               g by mcatot;
+               [np2f1-mcatot*]; 
+               [g@0];
+               %c#3%
+               g by np2f1* np2f2 np2f3 ;
+               g by np3f1 np3f2 np3f3 np3f4 np3f5 np3f6 np3f7; 
+               g by scauf1 scauf2 scauf3 scauf4;
+               g by mcatot;
+               [np2f1-mcatot*]; 
+               [g@0];
+               %c#4%
+               g by np2f1* np2f2 np2f3 ;
+               g by np3f1 np3f2 np3f3 np3f4 np3f5 np3f6 np3f7; 
+               g by scauf1 scauf2 scauf3 scauf4;
+               g by mcatot;
+               [np2f1-mcatot*]; 
+               [g@0];"
+
+goo3.usevar <- c("np2f1", "np2f2", "np2f3", 
+                 "np3f1", "np3f2", "np3f3", "np3f4", "np3f5", "np3f6", "np3f7", 
+                 "scauf1", "scauf2", "scauf3", "scauf4", 
+                 "mcatot")
+
+goo3.fmm.body <- mplusObject(
+  ANALYSIS = goo.analysis,
+  VARIABLE = goo3.variable,
+  MODEL = goo3.model,
+  OUTPUT = goo.output,
+  SAVEDATA = goo3.savedata,
+  usevariables = goo3.usevar,
+  rdata = ppmi.pd
+)
+goo3.fmm.fit <- mplusModeler(goo3.fmm.body,
+                             modelout = "goo003.fmm.inp",
+                             run = TRUE)
+
+goo003.param <-extractModelParameters("goo003.fmm.out")$stdyx.standardized
+
+goo003cprob <- readModels("goo003.fmm.out")$savedata 
+goo003cprob <- goo003cprob[,c("G", "CPROB1", "CPROB2", "CPROB3", "CPROB4", "C")]
+
+
+entropy <- round(extractModelSummaries("goo003.fmm.out")$Entropy, 2)
+
+```
+
+```{r}
+goo003.param %>%
+  filter(paramHeader=="G.BY"|paramHeader=="Intercepts") %>%
+  select(paramHeader, param, est, LatentClass) %>%
+  spread("paramHeader", "est") %>%
+  mutate(difficulty = Intercepts*G.BY) %>%
+  ggplot(aes(x=param, y = difficulty, group=LatentClass, color=LatentClass)) +
+    geom_line() + 
+    theme(axis.text.x  = element_text(angle=90, vjust=0.5)) +
+    scale_y_continuous(name = "Estimated Difficulty") +
+    scale_x_discrete(name = "Item") +
+    scale_color_brewer("Latent Class", palette="Set1") +
+    ggtitle("Profile plot of difficulty by latent class") + 
+    geom_hline(aes(yintercept=0))
+  
+
+  
+ 
+```
+
+The hope is that this latent classification of PD subtypes has a role in prognostication or management. As preliminary evidence for this, we provide longitudinal trajectories for each group’s general symptom domain progression over time. This is illustrated in Figure 3. This figure also summarizes a view of the relative frequency with which we might expect to observe patients with PD falling in one of the four classes if the patient sample was generated in a fashion similar to that of the PPMI data set. Some inferences regarding the class results are summarized as follows: Class 4 is Rarely observed. Only 26 observations observed over 3 unique patients fit this profile. This is too infrequent to warrant serious inference, but interesting enough to follow-up with a larger sample. Class 1 is observed in about 10% of the observations. The longitudinal trajectory is negative, implying no reliable increase in symptom intensity or frequency over the 4-5 year follow-up. This class had a fundamentally distinct symptom profile and might represent a distinct clinical entity or even false-positive for PD. Class 3 is the most frequently observed latent class, occurring in about 69% of observations. A trend similar to the general trend seen in Figure 1, slowly increasing severity over time. Class 2 is the second-most frequently observed latent class, occurring in about 19% of observations. This class is distinct for having more rapid progression of signs and symptoms relative to class 3.
+
+```{r}
+ppmi.pd.results <- cbind(ppmi.pd, goo003cprob)
+ppmi.pd.results %>%
+  ggplot(aes(x=visit, y=G, group=patno)) +
+  geom_line() +
+  facet_wrap( ~ C, ncol=2) +
+  geom_smooth(aes(group = 1), se=FALSE) +
+  scale_x_continuous(name = "Years from baseline visit",
+                     breaks = c(0, 1, 2, 3, 4, 5),
+                     labels = c(0, 1, 2, 3, 4, 5))
+
+
+```
+

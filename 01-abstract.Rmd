@@ -1,0 +1,11 @@
+# Abstract 
+
+## Summary of Results
+This Parkinson's Progression Markers Initiative (PPMI) Data Challenge 2016 submission presents a theoretically-based and clinically-relevant statistical model that can be used to quantify the severity of Parkinson’s Disease (PD) and describe subtypes of PD. Our quantitative model is based on expert clinical input and state-of-the-art latent variable measurement model data analysis. We bring multiple domains of symptoms into a single framework for quantifying severity, and identified sub-groups of patients with qualitatively and quantitatively distinct symptom profiles with high accuracy. These patient sub-types experience qualitatively different patterns of progression over time.
+
+## Description of Methods Used
+Our methodology uses a latent variable measurement model to describe the severity of PD symptoms. We extend this model to identify sub-types of PD using a categorical latent variable modeling approach (factor mixture models). We provide preliminary validity data in the form of model fit statistics and prediction of longitudinal trends. The method and results are described in greater detail in the Methodologic Details and Results section.
+
+## Impact of Results
+The motivation behind our approach is that PD patients experience the disease with a myriad of signs and symptoms, and that progression of the disease may be difficult to perceive clinically because different symptom domains progress and might have variable impact on quality of life and functional ability. Our approach uses a set of symptoms that are clinically relevant, builds upon prior measurement research, and arrives at a quantifiable metric that can be used to unambiguously track disease course and characterize possible clinical subtypes. The uses of the measurement approach could include outcomes assessment in clinical trials, treatment planning, and building the clinical epidemiologic knowledge base for PD.
+
