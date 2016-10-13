@@ -24,3 +24,7 @@ source("003-filter-data.r")
 
 ```
 
+# Data
+The data for this analysis was downloaded June 27, 2016.
+
+
